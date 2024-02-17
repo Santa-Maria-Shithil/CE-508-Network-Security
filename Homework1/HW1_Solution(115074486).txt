@@ -127,7 +127,7 @@ SBU ID: 115074486
           61 47110
           36 40341
           Here first column represents the frequency and the second column represents the ports. So, top 5 tcp ports are 80, 54634, 49836, 47110, 
-          and 40342. 
+          and 40341. 
           Command Used: tcpdump -n -r hw1.pcap tcp  | awk '{print $5}' | cut -d '.' -f 5| cut -d ':' -f 1|sort| uniq -c|sort -nr| head -5
 
      Part2: What are the top-5 UDP destination ports?
@@ -182,7 +182,7 @@ SBU ID: 115074486
      Command Used: tcpdump -n '(tcp port http) && (tcp[32:4] = 0x47455420)' -r hw1.pcap | wc -l
 
      Part2: Print the URLs of all HTTP requests for JPG files.
-     Answer:
+     Answer: (Note: I printed only the unique URLs.)
      http://pic.leech.it/i/f166c/479246b0asttas.jpg
      /i/f166c/479246b0asttas.jpg
      http://ecx.images-amazon.com/images/I/41oZ1XsiOAL._SL500_AA300_.jpg
@@ -210,7 +210,7 @@ SBU ID: 115074486
      tcpdump -r hw1.pcap -e -nn| awk '{print $2}'| sort | uniq -c| sort -rn| head -n 1| awk '{print $2}'
      The MAC address of the device is : c4:3d:c7:17:6f:9b
      Then I used the https://macaddress.io/ webiste to find the brand of the device. 
-     I lookup with the OUI c4:3d:c7 (OUI is the first 3 octet of the MAC address c4:3d:c7:17:6f:9b 
+     I lookup with the OUI c4:3d:c7 (OUI is the first 3 octet of the MAC address 
      that represents the organizational unique identifier)
      The website shows that the brand name is 'Netgear'.
      

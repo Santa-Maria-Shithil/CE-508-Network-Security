@@ -24,8 +24,10 @@ SBU ID: 115074486
  
  1.4 How many packets were exchanged between 91.189.90.41 and 192.168.0.200?
      Answer: 14
-     Command Used1: tcpdump -n -r hw1.pcap "(ip src 91.189.90.41 or ip src 192.168.0.200) and (ip dst 192.168.0.200 or ip dst 91.189.90.41)" | wc -l
-     Command Used2: tcpdump -n "(ip src 192.168.0.200 and ip dst 91.189.90.41) or (ip src 91.189.90.41 and ip dst 192.168.0.200)" -r hw1.pcap | wc -l
+     Solution Approach1:
+     Command Used: tcpdump -n -r hw1.pcap "(ip src 91.189.90.41 or ip src 192.168.0.200) and (ip dst 192.168.0.200 or ip dst 91.189.90.41)" | wc -l
+     Solution Approach2:
+     Command Used: tcpdump -n "(ip src 192.168.0.200 and ip dst 91.189.90.41) or (ip src 91.189.90.41 and ip dst 192.168.0.200)" -r hw1.pcap | wc -l
  
  1.5 Print the unique source IP addresses found in the trace in numerical
      order.
@@ -141,13 +143,17 @@ SBU ID: 115074486
  
  1.9 How many TCP packets have the SYN flag set?
      Answer: 75
-     Command Used1: tcpdump -n -r hw1.pcap 'tcp[tcpflags] & tcp-syn != 0' | wc -l
-     Command Used2: tcpdump -n -r hw1.pcap '(tcp[13] & 2) == 2' | wc -l
+     Solution Approach1:
+     Command Used: tcpdump -n -r hw1.pcap 'tcp[tcpflags] & tcp-syn != 0' | wc -l
+     Solution Approach2:
+     Command Used: tcpdump -n -r hw1.pcap '(tcp[13] & 2) == 2' | wc -l
 
 1.10 How many TCP connection attempts were made?
      Answer: 37
-     Command Used1: tcpdump -n -r hw1.pcap 'tcp[13] == 2' | wc -l 
-     Command Used2:  tcpdump -n -r hw1.pcap 'tcp[tcpflags] == tcp-syn' | wc -l
+     Solution Approach1:
+     Command Used: tcpdump -n -r hw1.pcap 'tcp[13] == 2' | wc -l 
+     Solution Approach2: 
+     Command Used:  tcpdump -n -r hw1.pcap 'tcp[tcpflags] == tcp-syn' | wc -l
  
 1.11 Towards which ports were TCP connection attempts made? How many attempts
      per port?
@@ -703,7 +709,4 @@ SBU ID: 115074486
      1469             1
      1514             1034
 
-2. What to submit
 
-An plain ASCII text file with the answers to the above questions, along with
-the command/script/approach used to find them.

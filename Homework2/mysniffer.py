@@ -44,3 +44,8 @@ def live_capture(interface=None):
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()
     live_capture(interface=interfaceName)
+
+
+
+
+#ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark

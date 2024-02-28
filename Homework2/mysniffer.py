@@ -1,6 +1,8 @@
 import argparse
-import pyshark
-import os
+from scapy.all import *
+import logging
+from datetime import datetime
+
 
 def captureOptions():   
     # Create the parser
@@ -29,23 +31,81 @@ def captureOptions():
 
     return args.interface, args.read,args.expression
 
+def current_time():
+    now = datetime.now()
+    # Format the current time
+    formatted_time = now.strftime('%Y-%m-%d %H:%M:%S') + '.' + str(now.microsecond)
+    return formatted_time
 
-def live_capture(interface=None):
-    # Create a live capture on a specific interface or default if None
-    capture = pyshark.LiveCapture(interface=interface)
-    
-    print(f"Starting live capture on {'default interface' if interface is None else interface}...")
+def parse_http_headers(payload):
     try:
-        for packet in capture.sniff_continuously():  # Remove packet_count to capture indefinitely
-            print(f"Captured packet: {packet}")
+        headers, body = payload.decode().split("\r\n\r\n", 1)
+    except ValueError:
+        headers = payload.decode()
+        body = ""
+    except:
+        return None, None  # In case of non-decodable payloads
+    header_lines = headers.split("\r\n")
+    return header_lines, body
+
+def extract_host_and_url(header_lines):
+    host, url = None, None
+    for line in header_lines:
+        if line.startswith("Host:"):
+            host = line.split(":", 1)[1].strip()
+        elif line.startswith("GET") or line.startswith("POST"):
+            url = line.split(" ")[1]
+    return host, url
+
+
+def handle_packet(packet):
+    """
+    This function will be called for each captured packet.
+    You can add custom logic here to process or filter packets.
+    """
+    #print(f"Captured packet: {packet}")
+    if packet.haslayer(TCP) and packet.haslayer(IP):
+        ip_layer = packet[IP]
+        tcp_layer = packet[TCP]
+    # Check for HTTP (port 80) 
+        if tcp_layer.dport == 80 or tcp_layer.sport == 80:
+            #print(f"Packet: {ip_layer.src} -> {ip_layer.dst} | {tcp_layer.sport} -> {tcp_layer.dport}")
+            if packet.haslayer(Raw):
+                # If HTTP, attempt to print the raw data
+                try:
+                    payload = packet[Raw].load.decode(errors='ignore')
+                    if payload.startswith('GET'):
+                        header_lines, body = parse_http_headers(packet[Raw].load)
+                        if header_lines:
+                            host, url = extract_host_and_url(header_lines)
+                        print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} GET {url}")
+                        #print(payload)
+                        #print("----------")
+                    if payload.startswith('POST'):
+                        header_lines, body = parse_http_headers(packet[Raw].load)
+                        if header_lines:
+                            host, url = extract_host_and_url(header_lines)
+                        print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} POST {url}")
+                        #print(payload)
+                        #print("----------")
+                except Exception as e:
+                    print("Could not decode the payload.")
+
+
+def main(interfaceName):
+    try:
+        print("Packet capturing started. Press Ctrl+C to stop.")
+        # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
+        sniff(iface=interfaceName, prn=handle_packet, store=0)
     except KeyboardInterrupt:
-        print("\nStopped packet capture.")
+        print("\nCapturing stopped by user.")
+    except Exception as e:
+        print(f"\nAn error occurred: {e}")
 
 if __name__ == "__main__":
+    logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Suppress the No IPv4 address warning on interfaces
     interfaceName, tracefile, expression = captureOptions()
-    live_capture(interface=interfaceName)
-
-
+    main(interfaceName)
 
 
 #ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark

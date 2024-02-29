@@ -1,8 +1,10 @@
 import argparse
-from scapy.all import *
+from scapy.all import sniff, TCP, Raw, IP
 import logging
 from datetime import datetime
-from scapy.layers.tls.all import TLS, TLSClientHello, TLS_Ext_ServerName
+from scapy.layers.tls.handshake import TLSClientHello
+from scapy.layers.tls.extensions import TLS_Ext_ServerName
+from scapy.layers.tls.record import TLS
 
 
 
@@ -90,24 +92,29 @@ def decimal_to_tls_version(decimal_version):
     }
     return tls_versions.get(decimal_version, "Unknown TLS Version")
 
-def parse_tls_client_hello(tls_payload):
-
-    version, host = None
-    if TLSClientHello in tls_payload:
-        version = decimal_to_tls_version(tls_payload[TLSClientHello].version)
-
-    for msg in tls_payload.msg:
-        # Check if this is a ClientHello message
-        if isinstance(msg, TLSClientHello):
-            # Loop through the extensions in the ClientHello message
-            for ext in msg.ext:
-                # Check if this extension is the Server Name Indication (SNI)
-                if isinstance(ext, TLS_Ext_ServerName):
-                    # Extract the hostname from the SNI
-                    host = ext.servernames[0].servername.decode()
+def get_version(packet):
 
 
-    return version, host
+    tls_packet = TLS(packet[Raw].load)
+    if tls_packet.haslayer(TLSClientHello):
+        client_hello = tls_packet[TLSClientHello]
+        version = decimal_to_tls_version(client_hello.version)
+        
+        for msg in tls_packet.msg: #problem: can not capture the server name from TLS packet
+            if isinstance(msg, TLSClientHello):
+                print(f"TLS Version: {msg.version}")
+                sni = next((ext for ext in msg.ext if isinstance(ext, TLS_Ext_ServerName)), None)
+                if sni:
+                    for server_name in sni.servernames:
+                        print(f"SNI: {server_name.data.decode()}")
+                        hostname = server_name.data.decode()
+                        return version, hostname
+        return version, None
+        
+ 
+
+    return None, None
+
 
 def handle_packet(packet):
     """
@@ -120,7 +127,7 @@ def handle_packet(packet):
         tcp_layer = packet[TCP]
         if is_http_header(packet):
             try:
-                payload = packet[Raw].load.decode(errors='ignore')
+                payload = packet[Raw].load.decode('utf-8')
                 if payload.startswith('GET'):
                     header_lines, body = parse_http_headers(packet[Raw].load)
                     if header_lines:
@@ -136,10 +143,9 @@ def handle_packet(packet):
 
         if is_tls_header(packet):
             try:
-                tls_payload = TLS(packet.load)
-                tls_version, host = parse_tls_client_hello(tls_payload)
-                #print(packet[Raw].load)
-                print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host}")
+
+                tls_version, host_name = get_version(packet)
+                print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
             except Exception as e:
                 print(f"Could not decode the TLS payload.{e}")
 
@@ -147,7 +153,8 @@ def main(interfaceName):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
         # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
-        sniff(iface=interfaceName, prn=handle_packet, store=0)
+        #sniff(iface=interfaceName, prn=handle_packet, store=0)
+        sniff( prn=handle_packet, store=0)
     except KeyboardInterrupt:
         print("\nCapturing stopped by user.")
     except Exception as e:

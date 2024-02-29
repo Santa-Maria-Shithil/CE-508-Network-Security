@@ -2,6 +2,8 @@ import argparse
 from scapy.all import *
 import logging
 from datetime import datetime
+from scapy.layers.tls.all import TLS, TLSClientHello, TLS_Ext_ServerName
+
 
 
 def captureOptions():   
@@ -57,40 +59,89 @@ def extract_host_and_url(header_lines):
             url = line.split(" ")[1]
     return host, url
 
+def is_http_header(packet):
+    """
+    Very basic heuristic to check if a packet payload looks like an HTTP request.
+    This function checks for the presence of HTTP methods in the payload.
+    """
+    if packet.haslayer(Raw):
+        try:
+            payload = packet[Raw].load.decode('utf-8', errors='ignore')
+            # Common HTTP methods that could indicate an HTTP request
+            methods = ['GET ', 'POST ', 'PUT ', 'DELETE ', 'HEAD ', 'OPTIONS ', 'PATCH ', 'CONNECT ']
+            return any(method in payload for method in methods)
+        except:
+            return False
+
+def is_tls_header(packet):
+    if packet.haslayer(Raw):
+        payload = packet[Raw].load
+        # Check for the presence of a TLS handshake (0x16) and "Client Hello" (0x01)
+        if len(payload) > 5 and payload[0] == 0x16 and payload[5] == 0x01:
+            return True
+    return False
+
+def decimal_to_tls_version(decimal_version):
+    tls_versions = {
+        769: "TLS v1.0",
+        770: "TLS v1.1",
+        771: "TLS v1.2",
+        772: "TLS v1.3",
+    }
+    return tls_versions.get(decimal_version, "Unknown TLS Version")
+
+def parse_tls_client_hello(tls_payload):
+
+    version, host = None
+    if TLSClientHello in tls_payload:
+        version = decimal_to_tls_version(tls_payload[TLSClientHello].version)
+
+    for msg in tls_payload.msg:
+        # Check if this is a ClientHello message
+        if isinstance(msg, TLSClientHello):
+            # Loop through the extensions in the ClientHello message
+            for ext in msg.ext:
+                # Check if this extension is the Server Name Indication (SNI)
+                if isinstance(ext, TLS_Ext_ServerName):
+                    # Extract the hostname from the SNI
+                    host = ext.servernames[0].servername.decode()
+
+
+    return version, host
 
 def handle_packet(packet):
     """
     This function will be called for each captured packet.
     You can add custom logic here to process or filter packets.
     """
-    #print(f"Captured packet: {packet}")
+
     if packet.haslayer(TCP) and packet.haslayer(IP):
         ip_layer = packet[IP]
         tcp_layer = packet[TCP]
-    # Check for HTTP (port 80) 
-        if tcp_layer.dport == 80 or tcp_layer.sport == 80:
-            #print(f"Packet: {ip_layer.src} -> {ip_layer.dst} | {tcp_layer.sport} -> {tcp_layer.dport}")
-            if packet.haslayer(Raw):
-                # If HTTP, attempt to print the raw data
-                try:
-                    payload = packet[Raw].load.decode(errors='ignore')
-                    if payload.startswith('GET'):
-                        header_lines, body = parse_http_headers(packet[Raw].load)
-                        if header_lines:
-                            host, url = extract_host_and_url(header_lines)
-                        print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} GET {url}")
-                        #print(payload)
-                        #print("----------")
-                    if payload.startswith('POST'):
-                        header_lines, body = parse_http_headers(packet[Raw].load)
-                        if header_lines:
-                            host, url = extract_host_and_url(header_lines)
-                        print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} POST {url}")
-                        #print(payload)
-                        #print("----------")
-                except Exception as e:
-                    print("Could not decode the payload.")
+        if is_http_header(packet):
+            try:
+                payload = packet[Raw].load.decode(errors='ignore')
+                if payload.startswith('GET'):
+                    header_lines, body = parse_http_headers(packet[Raw].load)
+                    if header_lines:
+                        host, url = extract_host_and_url(header_lines)
+                    print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} GET {url}")
+                if payload.startswith('POST'):
+                    header_lines, body = parse_http_headers(packet[Raw].load)
+                    if header_lines:
+                        host, url = extract_host_and_url(header_lines)
+                    print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} POST {url}")
+            except Exception as e:
+                print("Could not decode the HTTP payload.")
 
+        if is_tls_header(packet):
+            try:
+                tls_payload = TLS(packet.load)
+                tls_version, host = parse_tls_client_hello(tls_payload)
+                #print(packet[Raw].load)
+                print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host}")
+            except Exception as e:
+                print(f"Could not decode the TLS payload.{e}")
 
 def main(interfaceName):
     try:
@@ -103,7 +154,7 @@ def main(interfaceName):
         print(f"\nAn error occurred: {e}")
 
 if __name__ == "__main__":
-    logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Suppress the No IPv4 address warning on interfaces
+    #logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Suppress the No IPv4 address warning on interfaces
     interfaceName, tracefile, expression = captureOptions()
     main(interfaceName)
 

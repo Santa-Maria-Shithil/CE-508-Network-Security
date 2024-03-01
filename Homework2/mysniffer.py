@@ -116,7 +116,9 @@ def trackingFromInterface(interfaceName):
         print(f"\nAn error occurred: {e}")
 
 def trackingFromFile(fileName):
-    sniff(offline = fileName)
+    packets = rdpcap(fileName)
+    for packet in packets:
+        handle_packet(packet)
 
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()

@@ -126,4 +126,3 @@ if __name__ == "__main__":
         trackingFromFile(tracefile)
 
 
-#ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark

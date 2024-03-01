@@ -67,11 +67,11 @@ def trackingFromInterface(interfaceName):
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
-arpCache = read_arp_cache()
+ARP_CACHE = read_arp_cache()
 
 if __name__ == "__main__":
     interfaceName = captureOptions()
     
     trackingFromInterface(interfaceName)
 
-    print(arpCache)
+    print(ARP_CACHE)

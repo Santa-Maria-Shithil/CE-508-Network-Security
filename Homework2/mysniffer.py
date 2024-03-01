@@ -104,27 +104,25 @@ def handle_packet(packet):
             except Exception as e:
                 print(f"Could not decode the TLS payload.{e}")
 
-def trackingFromInterface(interfaceName):
+def trackingFromInterface(interfaceName,exp):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
         # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
         #sniff(iface=interfaceName, prn=handle_packet, store=0)
-        sniff( prn=handle_packet, store=0, iface = interfaceName)
+        sniff( prn=handle_packet, store=0, iface = interfaceName, filter = exp)
     except KeyboardInterrupt:
         print("\nCapturing stopped by user.")
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
-def trackingFromFile(fileName):
-    packets = rdpcap(fileName)
-    for packet in packets:
-        handle_packet(packet)
+def trackingFromFile(fileName,exp):
+    sniff( prn=handle_packet, offline = fileName, filter = exp)
 
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()
     if tracefile == "none":
-        trackingFromInterface(interfaceName)
+        trackingFromInterface(interfaceName,expression)
     else:
-        trackingFromFile(tracefile)
+        trackingFromFile(tracefile,expression)
 
 

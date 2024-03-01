@@ -1,10 +1,13 @@
+##################################################################################################
+#                                    Imported Packages                                           #
+##################################################################################################
 import argparse
-from scapy.all import sniff, TCP, Raw, IP
-import logging
 from datetime import datetime
-from scapy.layers.tls.handshake import TLSClientHello
-from scapy.layers.tls.extensions import TLS_Ext_ServerName
-from scapy.layers.tls.record import TLS
+from scapy.all import *
+from scapy.layers.tls.all import *
+load_layer("tls")
+load_layer("http")
+
 
 
 
@@ -17,8 +20,8 @@ def captureOptions():
     expression_help_string = "The optional <expression> argument is a BPF filter that specifies a subset of the traffic to be monitored (similar to tcpdump)."
 
     #Adding arguments
-    parser.add_argument("-i","--interface", metavar="<interface>", help=interface_help_string, required=False, nargs='?',default='en0')
-    parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False)
+    parser.add_argument("-i","--interface", metavar="<interface>", help=interface_help_string, required=False, nargs='?',default=conf.iface)
+    parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False, nargs='?', default="none")
     parser.add_argument("expression", help=expression_help_string, nargs='?', default="none")
 
     # Parse the arguments
@@ -41,48 +44,6 @@ def current_time():
     formatted_time = now.strftime('%Y-%m-%d %H:%M:%S') + '.' + str(now.microsecond)
     return formatted_time
 
-def parse_http_headers(payload):
-    try:
-        headers, body = payload.decode().split("\r\n\r\n", 1)
-    except ValueError:
-        headers = payload.decode()
-        body = ""
-    except:
-        return None, None  # In case of non-decodable payloads
-    header_lines = headers.split("\r\n")
-    return header_lines, body
-
-def extract_host_and_url(header_lines):
-    host, url = None, None
-    for line in header_lines:
-        if line.startswith("Host:"):
-            host = line.split(":", 1)[1].strip()
-        elif line.startswith("GET") or line.startswith("POST"):
-            url = line.split(" ")[1]
-    return host, url
-
-def is_http_header(packet):
-    """
-    Very basic heuristic to check if a packet payload looks like an HTTP request.
-    This function checks for the presence of HTTP methods in the payload.
-    """
-    if packet.haslayer(Raw):
-        try:
-            payload = packet[Raw].load.decode('utf-8', errors='ignore')
-            # Common HTTP methods that could indicate an HTTP request
-            methods = ['GET ', 'POST ', 'PUT ', 'DELETE ', 'HEAD ', 'OPTIONS ', 'PATCH ', 'CONNECT ']
-            return any(method in payload for method in methods)
-        except:
-            return False
-
-def is_tls_header(packet):
-    if packet.haslayer(Raw):
-        payload = packet[Raw].load
-        # Check for the presence of a TLS handshake (0x16) and "Client Hello" (0x01)
-        if len(payload) > 5 and payload[0] == 0x16 and payload[5] == 0x01:
-            return True
-    return False
-
 def decimal_to_tls_version(decimal_version):
     tls_versions = {
         769: "TLS v1.0",
@@ -92,28 +53,31 @@ def decimal_to_tls_version(decimal_version):
     }
     return tls_versions.get(decimal_version, "Unknown TLS Version")
 
-def get_version(packet):
+def get_HTTP_Info(packet):
+    method = None
+    url = None
+    host = None
+    version = None
+    method = packet[HTTPRequest].Method.decode('utf-8')
+    url = packet[HTTPRequest].Path.decode('utf-8')
+    host = packet[HTTPRequest].Host.decode('utf-8')
+    version = packet[HTTPRequest].Http_Version.decode('utf-8')
+    return method, url, host, version
 
 
-    tls_packet = TLS(packet[Raw].load)
-    if tls_packet.haslayer(TLSClientHello):
-        client_hello = tls_packet[TLSClientHello]
-        version = decimal_to_tls_version(client_hello.version)
-        
-        for msg in tls_packet.msg: #problem: can not capture the server name from TLS packet
-            if isinstance(msg, TLSClientHello):
-                print(f"TLS Version: {msg.version}")
-                sni = next((ext for ext in msg.ext if isinstance(ext, TLS_Ext_ServerName)), None)
-                if sni:
-                    for server_name in sni.servernames:
-                        print(f"SNI: {server_name.data.decode()}")
-                        hostname = server_name.data.decode()
-                        return version, hostname
-        return version, None
-        
- 
+def get_TLS_Info(packet):
+    version = None
+    server_name = None
+    tls_layer = packet[TLS]
+    if tls_layer.haslayer(TLSClientHello):
+        version = decimal_to_tls_version(tls_layer.version)
+        #print("TLS Version:", tls_layer.version)
+        if tls_layer.haslayer(TLS_Ext_ServerName):
+            #print("has exte")
+            server_name_ext = tls_layer[TLS_Ext_ServerName]
+            server_name = server_name_ext.servernames[0].servername.decode()
 
-    return None, None
+    return version, server_name
 
 
 def handle_packet(packet):
@@ -125,45 +89,41 @@ def handle_packet(packet):
     if packet.haslayer(TCP) and packet.haslayer(IP):
         ip_layer = packet[IP]
         tcp_layer = packet[TCP]
-        if is_http_header(packet):
+        if packet.haslayer(HTTPRequest):
             try:
-                payload = packet[Raw].load.decode('utf-8')
-                if payload.startswith('GET'):
-                    header_lines, body = parse_http_headers(packet[Raw].load)
-                    if header_lines:
-                        host, url = extract_host_and_url(header_lines)
-                    print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} GET {url}")
-                if payload.startswith('POST'):
-                    header_lines, body = parse_http_headers(packet[Raw].load)
-                    if header_lines:
-                        host, url = extract_host_and_url(header_lines)
-                    print(f"{current_time()} HTTP {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} POST {url}")
+                method, url, host, version = get_HTTP_Info(packet)
+                print(f"{current_time()} {version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} {method} {url}")
             except Exception as e:
-                print("Could not decode the HTTP payload.")
+                print(f"Could not decode the HTTP payload.{e}")
 
-        if is_tls_header(packet):
+        if packet.haslayer(TLS):
             try:
-
-                tls_version, host_name = get_version(packet)
-                print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
+                tls_version, host_name = get_TLS_Info(packet)
+                if tls_version != None and host_name != None:
+                    print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
             except Exception as e:
                 print(f"Could not decode the TLS payload.{e}")
 
-def main(interfaceName):
+def trackingFromInterface(interfaceName):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
         # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
         #sniff(iface=interfaceName, prn=handle_packet, store=0)
-        sniff( prn=handle_packet, store=0)
+        sniff( prn=handle_packet, store=0, iface = interfaceName)
     except KeyboardInterrupt:
         print("\nCapturing stopped by user.")
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
+def trackingFromFile(fileName):
+    sniff(offline = fileName)
+
 if __name__ == "__main__":
-    #logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Suppress the No IPv4 address warning on interfaces
     interfaceName, tracefile, expression = captureOptions()
-    main(interfaceName)
+    if tracefile == "none":
+        trackingFromInterface(interfaceName)
+    else:
+        trackingFromFile(tracefile)
 
 
 #ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark

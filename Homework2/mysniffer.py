@@ -9,8 +9,6 @@ load_layer("tls")
 load_layer("http")
 
 
-
-
 def captureOptions():   
     # Create the parser
     interface = conf.iface

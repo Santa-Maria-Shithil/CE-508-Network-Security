@@ -13,6 +13,9 @@ load_layer("http")
 
 def captureOptions():   
     # Create the parser
+    interface = conf.iface
+    read = "none"
+    expression = "none"
     parser = argparse.ArgumentParser(description="Parsing argument from the command line.")
 
     interface_help_string = "Live capture from the network device <interface> (e.g., eth0). If not specified,  the program should automatically select a default interface to listen on. Capture should continue indefinitely until the user terminatesthe program."
@@ -20,9 +23,9 @@ def captureOptions():
     expression_help_string = "The optional <expression> argument is a BPF filter that specifies a subset of the traffic to be monitored (similar to tcpdump)."
 
     #Adding arguments
-    parser.add_argument("-i","--interface", metavar="<interface>", help=interface_help_string, required=False, nargs='?',default=conf.iface)
-    parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False, nargs='?', default="none")
-    parser.add_argument("expression", help=expression_help_string, nargs='?', default="none")
+    parser.add_argument("-i","--interface", metavar="<interface>", help=interface_help_string, required=False)
+    parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False)
+    parser.add_argument("expression", help=expression_help_string)
 
     # Parse the arguments
     args = parser.parse_args()
@@ -30,13 +33,19 @@ def captureOptions():
     # Access and display the arguments
 
     if args.interface:
-        print(f"Interface: {args.interface}")
-    if args.read:
-        print(f"Tracefile: {args.read}")
-    if args.expression: 
-        print(f"Expression: {args.expression}")
+        interface = args.interface
 
-    return args.interface, args.read,args.expression
+    if args.read:
+        read = args.read
+        
+    if args.expression: 
+        expression =args.expression
+        
+    print(f"Interface: {interface}")
+    print(f"Tracefile: {read}")
+    print(f"Expression: {expression}")
+
+    return interface, read, expression
 
 def current_time():
     now = datetime.now()
@@ -124,5 +133,3 @@ if __name__ == "__main__":
         trackingFromInterface(interfaceName,expression)
     else:
         trackingFromFile(tracefile,expression)
-
-

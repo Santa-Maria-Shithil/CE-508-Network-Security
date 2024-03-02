@@ -2,6 +2,7 @@ import subprocess
 import argparse
 from scapy.all import *
 from scapy.layers.tls.all import *
+import re
 load_layer("tls")
 load_layer("http")
 
@@ -46,15 +47,34 @@ def read_arp_cache():
     
     return arp_output
 
+
+
 def handle_packet(packet):
-    """
-    This function will be called for each captured packet.
-    You can add custom logic here to process or filter packets.
-    """
-    print(packet.summary())
+    if packet[ARP].op == 2: # ARP response (op=2)
+        print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
+    tracked_ip = packet[ARP].psrc
+    tracked_mac = packet[ARP].hwsrc
+
+    pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) on (\w+) ifscope (\[.*?\])')
+    # Search through ARP entries
+    ipfound = False
+    macfound = False
+    for match in pattern.finditer(ARP_ENTRIES):
+        ip, mac, _, _ = match.groups()
+        if ip == tracked_ip:
+            tracked_mac = mac
+            ipfound = True
+            if mac.lower() == tracked_mac.lower():
+                macfound = True
+                break
+
+    if ipfound == True and macfound ==True:
+        print("##########################Warning Warning Warning#################")
+        print("There is an ARP poisoning")
+        print(f"{tracked_ip} changed from {MAC.lower()} to {tracked_mac.lower()}")
 
 def arp_filter(packet):
-    return "ARP is at" in packet
+    return "ARP" in packet
 
 def trackingFromInterface(interfaceName):
     try:
@@ -67,12 +87,12 @@ def trackingFromInterface(interfaceName):
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
-ARP_CACHE = read_arp_cache()
+ARP_ENTRIES = read_arp_cache()
 
 if __name__ == "__main__":
     interfaceName = captureOptions()
     
-    print(ARP_CACHE)
+    print(ARP_ENTRIES)
 
     trackingFromInterface(interfaceName)
 

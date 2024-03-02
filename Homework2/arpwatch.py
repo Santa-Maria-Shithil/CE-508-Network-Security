@@ -54,7 +54,7 @@ def handle_packet(packet):
     print(packet.summary())
 
 def arp_filter(packet):
-    return "ARP" in packet
+    return "ARP is at" in packet
 
 def trackingFromInterface(interfaceName):
     try:
@@ -72,6 +72,8 @@ ARP_CACHE = read_arp_cache()
 if __name__ == "__main__":
     interfaceName = captureOptions()
     
+    print(ARP_CACHE)
+
     trackingFromInterface(interfaceName)
 
-    print(ARP_CACHE)
+    

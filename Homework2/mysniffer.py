@@ -13,7 +13,7 @@ def captureOptions():
     # Create the parser
     interface = conf.iface
     read = "none"
-    expression = "none"
+    expression = ""
     parser = argparse.ArgumentParser(description="Parsing argument from the command line.")
 
     interface_help_string = "Live capture from the network device <interface> (e.g., eth0). If not specified,  the program should automatically select a default interface to listen on. Capture should continue indefinitely until the user terminatesthe program."
@@ -23,7 +23,7 @@ def captureOptions():
     #Adding arguments
     parser.add_argument("-i","--interface", metavar="<interface>", help=interface_help_string, required=False)
     parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False)
-    parser.add_argument("expression", help=expression_help_string)
+    parser.add_argument("expression", help=expression_help_string, nargs='?', default="")
 
     # Parse the arguments
     args = parser.parse_args()

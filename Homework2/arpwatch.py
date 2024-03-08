@@ -51,31 +51,24 @@ def read_arp_cache():
 
 def handle_packet(packet):
 
-    #print(packet)
+    
     if packet[ARP].op == 2: # ARP response (op=2)
         #print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
         tracked_ip = packet[ARP].psrc
         tracked_mac = packet[ARP].hwsrc
-
-        pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) on (\w+) ifscope (\[.*?\])')
+        print(packet)
+        pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) \[ether\] on (\w+)')
         # Search through ARP entries
         ipfound = False
         macfound = False
-        #print(f"{tracked_ip.strip()}")
         #print(ARP_ENTRIES)
         for match in pattern.finditer(ARP_ENTRIES):
-        #for line in ARP_ENTRIES:
-        #    print(line)
-            ip, mac, _, _ = match.groups()
-            print("inside loop")
-            print(f"{ip.strip()} : {tracked_ip.strip()}")
-           # if ip.strip() == tracked_ip.strip():
-           #     ipfound = True
-            #    print(f"mac:{mac.lower()} tracked_mac:{tracked_mac.lower()}")
-             #   if mac.strip().lower() == tracked_mac.strip().lower():
-             #       print("inside 2nd condiiton")
-             #       macfound = True
-             #   break
+            ip, mac, _ = match.groups()
+            if ip.strip() == tracked_ip.strip():
+                ipfound = True
+                if mac.strip().lower() == tracked_mac.strip().lower():
+                    macfound = True
+                break
                 
 
         if ipfound == True and macfound ==False:

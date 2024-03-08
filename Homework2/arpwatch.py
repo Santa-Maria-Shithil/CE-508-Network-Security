@@ -51,7 +51,7 @@ def read_arp_cache():
 
 def handle_packet(packet):
 
-    print(packet)  
+    #print(packet)
     if packet[ARP].op == 2: # ARP response (op=2)
         #print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
         tracked_ip = packet[ARP].psrc
@@ -61,19 +61,24 @@ def handle_packet(packet):
         # Search through ARP entries
         ipfound = False
         macfound = False
+        #print(f"{tracked_ip.strip()}")
+        #print(ARP_ENTRIES)
         for match in pattern.finditer(ARP_ENTRIES):
+        #for line in ARP_ENTRIES:
+        #    print(line)
             ip, mac, _, _ = match.groups()
-            if mac.strip().lower() == tracked_mac.strip().lower():
-                #tracked_mac2 = mac
-                macfound = True
-                print(f"mac:{mac.lower()} tracked_mac:{tracked_mac.lower()}")
-                if ip.strip() == tracked_ip.strip().lower():
-                    print("inside 2nd condiiton")
-                    ipfound = True
-                break
+            print("inside loop")
+            print(f"{ip.strip()} : {tracked_ip.strip()}")
+           # if ip.strip() == tracked_ip.strip():
+           #     ipfound = True
+            #    print(f"mac:{mac.lower()} tracked_mac:{tracked_mac.lower()}")
+             #   if mac.strip().lower() == tracked_mac.strip().lower():
+             #       print("inside 2nd condiiton")
+             #       macfound = True
+             #   break
                 
 
-        if macfound == True and ipfound ==False:
+        if ipfound == True and macfound ==False:
             print("##########################Warning Warning Warning#################")
             print("There is an ARP poisoning")
             print(f"{tracked_ip} changed from {mac.lower()} to {tracked_mac.lower()}")

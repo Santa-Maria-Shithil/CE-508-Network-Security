@@ -133,8 +133,11 @@ def trackingFromInterface(interfaceName,exp):
         print(f"\nAn error occurred: {e}")
 
 def trackingFromFile(fileName,exp):
-    sniff( prn=handle_packet, offline = fileName, filter = exp)
-
+    try:
+        sniff( prn=handle_packet, offline = fileName, filter = exp)
+    except Exception as e:
+        print(f"\nAn error occurred: {e}")
+        
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()
     if tracefile == None:

@@ -137,7 +137,7 @@ def trackingFromFile(fileName,exp):
 
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()
-    if tracefile == :
+    if tracefile == None:
         trackingFromInterface(interfaceName,expression)
     else:
         trackingFromFile(tracefile,expression)

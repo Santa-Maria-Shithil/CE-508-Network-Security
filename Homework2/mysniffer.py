@@ -12,8 +12,8 @@ load_layer("http")
 def captureOptions():   
     # Create the parser
     interface = conf.iface
-    read = "none"
-    expression = ""
+    read = None
+    expression = None
     parser = argparse.ArgumentParser(description="Parsing argument from the command line.")
 
     interface_help_string = "Live capture from the network device <interface> (e.g., eth0). If not specified,  the program should automatically select a default interface to listen on. Capture should continue indefinitely until the user terminatesthe program."
@@ -46,10 +46,18 @@ def captureOptions():
     return interface, read, expression
 
 def format_time(timestamp):
-    dt_object = datetime.fromtimestamp(timestamp)
+    # Example packet.time value
+    packet_time = 1617709832.123456
 
-    # Format the datetime object to the desired string format
-    formatted_time = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')
+    # Convert the integer part to a datetime object
+    dt_object = datetime.fromtimestamp(int(packet_time))
+
+    # Add the microsecond precision
+    microseconds = int((packet_time - int(packet_time)) * 1_000_000)
+    dt_object_with_microseconds = dt_object.replace(microsecond=microseconds)
+
+    # Format as a string for readability
+    formatted_time = dt_object_with_microseconds.strftime('%Y-%m-%d %H:%M:%S.%f')
 
     return formatted_time
 
@@ -118,8 +126,6 @@ def handle_packet(packet):
 def trackingFromInterface(interfaceName,exp):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
-        # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
-        #sniff(iface=interfaceName, prn=handle_packet, store=0)
         sniff( prn=handle_packet, store=0, iface = interfaceName, filter = exp)
     except KeyboardInterrupt:
         print("\nCapturing stopped by user.")
@@ -131,7 +137,7 @@ def trackingFromFile(fileName,exp):
 
 if __name__ == "__main__":
     interfaceName, tracefile, expression = captureOptions()
-    if tracefile == "none":
+    if tracefile == :
         trackingFromInterface(interfaceName,expression)
     else:
         trackingFromFile(tracefile,expression)

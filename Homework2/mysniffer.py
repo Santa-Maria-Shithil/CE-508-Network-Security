@@ -111,7 +111,7 @@ def handle_packet(packet):
         try:
             tls_version, host_name = get_TLS_Info(packet)
             if tls_version != None and host_name != None:
-                print(f"{format_time(packet.time} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
+                print(f"{format_time(packet.time)} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
         except Exception as e:
             print(f"Could not decode the TLS payload.{e}")
 

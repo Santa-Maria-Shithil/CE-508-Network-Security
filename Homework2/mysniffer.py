@@ -45,10 +45,12 @@ def captureOptions():
 
     return interface, read, expression
 
-def current_time():
-    now = datetime.now()
-    # Format the current time
-    formatted_time = now.strftime('%Y-%m-%d %H:%M:%S') + '.' + str(now.microsecond)
+def format_time(timestamp):
+    dt_object = datetime.fromtimestamp(timestamp)
+
+    # Format the datetime object to the desired string format
+    formatted_time = dt_object.strftime('%Y-%m-%d %H:%M:%S.%f')
+
     return formatted_time
 
 
@@ -98,20 +100,20 @@ def handle_packet(packet):
     if packet.haslayer(TCP) and packet.haslayer(IP):
         ip_layer = packet[IP]
         tcp_layer = packet[TCP]
-        if packet.haslayer(HTTPRequest):
-            try:
-                method, url, host, version = get_HTTP_Info(packet)
-                print(f"{current_time()} {version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} {method} {url}")
-            except Exception as e:
-                print(f"Could not decode the HTTP payload.{e}")
+    if packet.haslayer(HTTPRequest):
+        try:
+            method, url, host, version = get_HTTP_Info(packet)
+            print(f"{format_time(packet.time)} {version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} {method} {url}")
+        except Exception as e:
+            print(f"Could not decode the HTTP payload.{e}")
 
-        if packet.haslayer(TLS):
-            try:
-                tls_version, host_name = get_TLS_Info(packet)
-                if tls_version != None and host_name != None:
-                    print(f"{current_time()} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
-            except Exception as e:
-                print(f"Could not decode the TLS payload.{e}")
+    if packet.haslayer(TLS):
+        try:
+            tls_version, host_name = get_TLS_Info(packet)
+            if tls_version != None and host_name != None:
+                print(f"{format_time(packet.time} {tls_version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host_name}")
+        except Exception as e:
+            print(f"Could not decode the TLS payload.{e}")
 
 def trackingFromInterface(interfaceName,exp):
     try:

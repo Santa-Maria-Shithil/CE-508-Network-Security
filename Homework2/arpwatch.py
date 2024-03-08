@@ -53,21 +53,16 @@ def handle_packet(packet):
 
     
     if packet[ARP].op == 2: # ARP response (op=2)
-        #print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
         tracked_ip = packet[ARP].psrc
         tracked_mac = packet[ARP].hwsrc
         print(packet)
         pattern = re.compile(r'\S+ \(([\d\.]+)\) at ([\da-f:]+) \[ether\] on (\w+)')
         ipfound = False
         macfound = False
-        #print(ARP_ENTRIES)
         for match in pattern.finditer(ARP_ENTRIES):
 
             ip, mac, _ = match.groups()
-            print(f"outside if {tracked_ip} : {ip}")
-
             if ip.strip() == tracked_ip.strip():
-                print(f"inside if {tracked_ip} : {ip}")
                 ipfound = True
                 if mac.strip().lower() == tracked_mac.strip().lower():
                     macfound = True

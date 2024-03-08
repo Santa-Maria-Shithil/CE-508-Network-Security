@@ -63,6 +63,7 @@ def handle_packet(packet):
         macfound = False
         #print(ARP_ENTRIES)
         for match in pattern.finditer(ARP_ENTRIES):
+            print("inside loop")
             ip, mac, _ = match.groups()
             if ip.strip() == tracked_ip.strip():
                 ipfound = True

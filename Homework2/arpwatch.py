@@ -63,17 +63,17 @@ def handle_packet(packet):
         macfound = False
         for match in pattern.finditer(ARP_ENTRIES):
             ip, mac, _, _ = match.groups()
-            if ip.strip() == tracked_ip.strip():
+            if mac.strip().lower() == tracked_mac.strip().lower():
                 #tracked_mac2 = mac
-                ipfound = True
+                macfound = True
                 print(f"mac:{mac.lower()} tracked_mac:{tracked_mac.lower()}")
-                if mac.strip().lower() == tracked_mac.strip().lower():
+                if ip.strip() == tracked_ip.strip().lower():
                     print("inside 2nd condiiton")
-                    macfound = True
+                    ipfound = True
                 break
                 
 
-        if ipfound == True and macfound ==False:
+        if macfound == True and ipfound ==False:
             print("##########################Warning Warning Warning#################")
             print("There is an ARP poisoning")
             print(f"{tracked_ip} changed from {mac.lower()} to {tracked_mac.lower()}")

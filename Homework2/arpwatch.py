@@ -57,8 +57,7 @@ def handle_packet(packet):
         tracked_ip = packet[ARP].psrc
         tracked_mac = packet[ARP].hwsrc
         print(packet)
-        pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) \[ether\] on (\w+)')
-        # Search through ARP entries
+        pattern = re.compile(r'\S+ \(([\d\.]+)\) at ([\da-f:]+) \[ether\] on (\w+)')
         ipfound = False
         macfound = False
         #print(ARP_ENTRIES)

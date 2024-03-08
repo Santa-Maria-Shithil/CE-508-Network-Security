@@ -9,13 +9,23 @@ load_layer("tls")
 load_layer("http")
 
 
+##################################################################################################
+#                                      Helper Functions                                          #
+#   captureOptions(): this function capture the arguments from the command line and return these #
+#                     to the main function to do the tracing                                     #
+#   
+##################################################################################################
 def captureOptions():   
-    # Create the parser
+    
+    # Initializing the command arguments
     interface = conf.iface
     read = None
     expression = None
+
+    # Initializing the parser of the command arguments
     parser = argparse.ArgumentParser(description="Parsing argument from the command line.")
 
+    # Creating the parser     
     interface_help_string = "Live capture from the network device <interface> (e.g., eth0). If not specified,  the program should automatically select a default interface to listen on. Capture should continue indefinitely until the user terminatesthe program."
     read_help_string = "Read packets from <tracefile> (tcpdump format). Useful for analyzing network traces that have been captured previously."
     expression_help_string = "The optional <expression> argument is a BPF filter that specifies a subset of the traffic to be monitored (similar to tcpdump)."
@@ -25,10 +35,10 @@ def captureOptions():
     parser.add_argument("-r", "--read", metavar ="<tracefile>",help=read_help_string, required=False)
     parser.add_argument("expression", help=expression_help_string, nargs='?', default="")
 
-    # Parse the arguments
+    # Parsing the arguments
     args = parser.parse_args()
 
-    # Access and display the arguments
+    # Access, display, and return the arguments
 
     if args.interface:
         interface = args.interface
@@ -46,9 +56,6 @@ def captureOptions():
     return interface, read, expression
 
 def format_time(timestamp):
-    # Example packet.time value
-    packet_time = 1617709832.123456
-
     # Convert the integer part to a datetime object
     dt_object = datetime.fromtimestamp(int(packet_time))
 
@@ -60,7 +67,6 @@ def format_time(timestamp):
     formatted_time = dt_object_with_microseconds.strftime('%Y-%m-%d %H:%M:%S.%f')
 
     return formatted_time
-
 
 def format_tls_version(version):
     # Split the version number into major and minor components

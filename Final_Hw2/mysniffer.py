@@ -11,11 +11,15 @@ load_layer("http")
 
 ##################################################################################################
 #                                      Helper Functions                                          #
-#   captureOptions(): this function capture the arguments from the command line and return these #
+#   capture_options(): capture the arguments from the command line and return these              #
 #                     to the main function to do the tracing                                     #
-#   
+#   format_time(packet_time): convert packet captured time to human readable format              #
+#   format_tls_version(version) : convert the TLS version to human readdable version             #
+#   get_HTTP_Info(packet): decode and retrive all HTTP request method, URI, host, and version    #
+#                          number                                                                #
+
 ##################################################################################################
-def captureOptions():   
+def capture_options():   
     
     # Initializing the command arguments
     interface = conf.iface
@@ -55,7 +59,7 @@ def captureOptions():
 
     return interface, read, expression
 
-def format_time(timestamp):
+def format_time(packet_time):
     # Convert the integer part to a datetime object
     dt_object = datetime.fromtimestamp(int(packet_time))
 
@@ -72,21 +76,27 @@ def format_tls_version(version):
     # Split the version number into major and minor components
     major = version >> 8  # Get the higher byte
     minor = version & 0xFF  # Get the lower byte
-    
-    # Adjust the base for the major version if necessary. TLS versions are usually represented with the major version as 3.
-    # The minor version then dictates the sub-version of TLS (e.g., 0x0303 is TLS 1.2, so minor version 3 means 1.2)
+
     formatted_version = f"TLS {major - 2}.{minor}"
     return formatted_version
 
 def get_HTTP_Info(packet):
+
+    #initializing the variables 
     method = None
     url = None
     host = None
     version = None
-    method = packet[HTTPRequest].Method.decode('utf-8')
+
+    #retrieving the method
+    method = packet[HTTPRequest].Method.decode('utf-8') 
+    #retrieving the Request URI
     url = packet[HTTPRequest].Path.decode('utf-8')
+    #retrieving the Host
     host = packet[HTTPRequest].Host.decode('utf-8')
+    #retrieving the version number
     version = packet[HTTPRequest].Http_Version.decode('utf-8')
+
     return method, url, host, version
 
 
@@ -146,7 +156,7 @@ def trackingFromFile(fileName,exp):
         print(f"\nAn error occurred: {e}")
 
 if __name__ == "__main__":
-    interfaceName, tracefile, expression = captureOptions()
+    interfaceName, tracefile, expression = capture_options()
     if tracefile == None:
         trackingFromInterface(interfaceName,expression)
     else:

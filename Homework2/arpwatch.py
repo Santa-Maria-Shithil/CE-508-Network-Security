@@ -50,28 +50,33 @@ def read_arp_cache():
 
 
 def handle_packet(packet):
+
+    print(packet)  
     if packet[ARP].op == 2: # ARP response (op=2)
-        print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
-    tracked_ip = packet[ARP].psrc
-    tracked_mac = packet[ARP].hwsrc
+        #print(f"ARP Response: From IP {packet[ARP].psrc} is at {packet[ARP].hwsrc}")
+        tracked_ip = packet[ARP].psrc
+        tracked_mac = packet[ARP].hwsrc
 
-    pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) on (\w+) ifscope (\[.*?\])')
-    # Search through ARP entries
-    ipfound = False
-    macfound = False
-    for match in pattern.finditer(ARP_ENTRIES):
-        ip, mac, _, _ = match.groups()
-        if ip == tracked_ip:
-            tracked_mac = mac
-            ipfound = True
-            if mac.lower() == tracked_mac.lower():
-                macfound = True
+        pattern = re.compile(r'\? \(([\d\.]+)\) at ([\da-f:]+) on (\w+) ifscope (\[.*?\])')
+        # Search through ARP entries
+        ipfound = False
+        macfound = False
+        for match in pattern.finditer(ARP_ENTRIES):
+            ip, mac, _, _ = match.groups()
+            if ip.strip() == tracked_ip.strip():
+                #tracked_mac2 = mac
+                ipfound = True
+                print(f"mac:{mac.lower()} tracked_mac:{tracked_mac.lower()}")
+                if mac.strip().lower() == tracked_mac.strip().lower():
+                    print("inside 2nd condiiton")
+                    macfound = True
                 break
+                
 
-    if ipfound == True and macfound ==True:
-        print("##########################Warning Warning Warning#################")
-        print("There is an ARP poisoning")
-        print(f"{tracked_ip} changed from {MAC.lower()} to {tracked_mac.lower()}")
+        if ipfound == True and macfound ==False:
+            print("##########################Warning Warning Warning#################")
+            print("There is an ARP poisoning")
+            print(f"{tracked_ip} changed from {mac.lower()} to {tracked_mac.lower()}")
 
 def arp_filter(packet):
     return "ARP" in packet

@@ -51,14 +51,16 @@ def current_time():
     formatted_time = now.strftime('%Y-%m-%d %H:%M:%S') + '.' + str(now.microsecond)
     return formatted_time
 
-def decimal_to_tls_version(decimal_version):
-    tls_versions = {
-        769: "TLS v1.0",
-        770: "TLS v1.1",
-        771: "TLS v1.2",
-        772: "TLS v1.3",
-    }
-    return tls_versions.get(decimal_version, "Unknown TLS Version")
+
+def format_tls_version(version):
+    # Split the version number into major and minor components
+    major = version >> 8  # Get the higher byte
+    minor = version & 0xFF  # Get the lower byte
+    
+    # Adjust the base for the major version if necessary. TLS versions are usually represented with the major version as 3.
+    # The minor version then dictates the sub-version of TLS (e.g., 0x0303 is TLS 1.2, so minor version 3 means 1.2)
+    formatted_version = f"TLS {major - 2}.{minor}"
+    return formatted_version
 
 def get_HTTP_Info(packet):
     method = None
@@ -77,7 +79,7 @@ def get_TLS_Info(packet):
     server_name = None
     tls_layer = packet[TLS]
     if tls_layer.haslayer(TLSClientHello):
-        version = decimal_to_tls_version(tls_layer.version)
+        version = format_tls_version(tls_layer.version)
         #print("TLS Version:", tls_layer.version)
         if tls_layer.haslayer(TLS_Ext_ServerName):
             #print("has exte")

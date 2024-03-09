@@ -10,16 +10,11 @@ load_layer("http")
 
 
 ##################################################################################################
-#                                      Helper Functions                                          #
+#                            Command Line Argument Handler Function                              #
 #   capture_options(): capture the arguments from the command line and return these              #
 #                     to the main function to do the tracing                                     #
-#   format_time(packet_time): convert packet captured time to human readable format              #
-#   format_tls_version(version) : convert the TLS version to human readdable version             #
-#   get_HTTP_Info(packet): decode and retrive HTTP request method, URI, host, and version        #
-#                          number                                                                #
-#   get_TLS_Info(packet): decode and retrive TLS version number, and the                         #
-#                         destination host name                                                  #
 ##################################################################################################
+
 def capture_options():   
     
     # Initializing the command arguments
@@ -60,6 +55,16 @@ def capture_options():
 
     return interface, read, expression
 
+##################################################################################################
+#                                      Helper Functions                                          #
+#   format_time(): convert packet captured time to human readable format                         #
+#   format_tls_version() : convert the TLS version to human readdable version                    #
+#   get_HTTP_Info(): decode and retrive HTTP request method, URI, host, and version              #
+#                          number                                                                #
+#   get_TLS_Info(): decode and retrive TLS version number, and the                               #
+#                         destination host name                                                  #
+##################################################################################################
+
 def format_time(packet_time):
     # Convert the integer part to a datetime object
     dt_object = datetime.fromtimestamp(int(packet_time))
@@ -78,7 +83,7 @@ def format_tls_version(version):
     major = version >> 8  # Get the higher byte
     minor = version & 0xFF  # Get the lower byte
 
-    formatted_version = f"TLS {major - 2}.{minor}"
+    formatted_version = f"TLS v{major - 2}.{minor}"
     
     return formatted_version
 
@@ -121,9 +126,10 @@ def get_TLS_Info(packet):
 
 ##################################################################################################
 #                                         Packet Handler Function                                #
-#   This function is called for each tracked packet, filter HTTP request and TLSClientHello,     #
-#   and then print the packet info                                                               #
+#   handle_packet(): This function is called for each tracked packet, filter HTTP request and    # 
+#                    TLSClientHello, and then print the packet info                              #
 ##################################################################################################
+
 def handle_packet(packet):
 
     if packet.haslayer(TCP) and packet.haslayer(IP):
@@ -149,7 +155,7 @@ def handle_packet(packet):
 
 ##################################################################################################
 #                                    Packet Tracing Function(Interface)                          #
-#   This function trace the packet from the interface                                            #
+#   trackingFromInterface(): trace the packet from the interface                                 #
 ##################################################################################################
 def trackingFromInterface(interfaceName,exp):
     try:
@@ -162,7 +168,7 @@ def trackingFromInterface(interfaceName,exp):
 
 ##################################################################################################
 #                                    Packet Tracing Function(From File)                          #
-#   This function trace the packet from the file                                                 #
+#   trackingFromFile(): trace the packet from the file                                           #
 ##################################################################################################
 def trackingFromFile(fileName,exp):
     try:

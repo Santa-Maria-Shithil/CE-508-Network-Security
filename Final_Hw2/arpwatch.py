@@ -1,16 +1,23 @@
+##################################################################################################
+#                                    Imported Packages                                           #
+##################################################################################################
 import subprocess
 import argparse
 from scapy.all import *
 from scapy.layers.tls.all import *
 import re
-load_layer("tls")
-load_layer("http")
 
 
-def captureOptions():   
-    # Create the parser
+##################################################################################################
+#                            Command Line Argument Handler Function                              #
+#   capture_options(): capture the arguments from the command line and return these              #
+#                     to the main function to do the tracing                                     #
+##################################################################################################
+def capture_options():   
+    # Initializing the command arguments
     interface = conf.iface
 
+    # Initializing the parser of the command arguments
     parser = argparse.ArgumentParser(description="Parsing argument from the command line.")
 
     interface_help_string = "Live capture from the network device <interface> (e.g., eth0). If not specified,  the program should automatically select a default interface to listen on. Capture should continue indefinitely until the user terminatesthe program."
@@ -22,7 +29,7 @@ def captureOptions():
     # Parse the arguments
     args = parser.parse_args()
 
-    # Access and display the arguments
+    # Access, display, and return the arguments
 
     if args.interface:
         interface = args.interfacen
@@ -31,9 +38,13 @@ def captureOptions():
 
     return interface
 
+##################################################################################################
+#                                      ARP Cache Reading Function                                #
+#       read_arp_cache(): This function read the ARP cache                                       #
+##################################################################################################
 def read_arp_cache():
         
-    command = "arp -a"  # or "ip neigh" for Linux
+    command = "arp -a"  
     
     # Execute the command
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -47,11 +58,14 @@ def read_arp_cache():
     
     return arp_output
 
-
+##################################################################################################
+#                                         ARP Poising Tracker                                    #
+#   handle_packet(): This function is called for each tracked packet, check whether is there     #
+#   any ARP poising if there is any attack, then detect it and print the warning                 #
+##################################################################################################
 
 def handle_packet(packet):
 
-    
     if packet[ARP].op == 2: # ARP response (op=2)
         tracked_ip = packet[ARP].psrc
         tracked_mac = packet[ARP].hwsrc
@@ -74,6 +88,11 @@ def handle_packet(packet):
             print("There is an ARP poisoning")
             print(f"{tracked_ip} changed from {mac.lower()} to {tracked_mac.lower()}")
 
+##################################################################################################
+#                                    Packet Tracing Function                                     #
+#   trackingFromInterface(): trace the packet from the interface                                 #
+#   arp_filter(): filter ARP packets                                                             #
+##################################################################################################
 def arp_filter(packet):
     return "ARP" in packet
 
@@ -81,17 +100,21 @@ def trackingFromInterface(interfaceName):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
         # Start sniffing packets. The store=0 ensures packets are not kept in memory for performance.
-        #sniff(iface=interfaceName, prn=handle_packet, store=0)
         sniff( prn=handle_packet, store=0, iface = interfaceName, lfilter=arp_filter)
     except KeyboardInterrupt:
         print("\nCapturing stopped by user.")
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
+##################################################################################################
+#                                    Main Function                                               #
+#   This is the main function, program starts from here                                          #
+##################################################################################################
+
 ARP_ENTRIES = read_arp_cache()
 
 if __name__ == "__main__":
-    interfaceName = captureOptions()
+    interfaceName = capture_options()
     
     print(ARP_ENTRIES)
 

@@ -15,9 +15,10 @@ load_layer("http")
 #                     to the main function to do the tracing                                     #
 #   format_time(packet_time): convert packet captured time to human readable format              #
 #   format_tls_version(version) : convert the TLS version to human readdable version             #
-#   get_HTTP_Info(packet): decode and retrive all HTTP request method, URI, host, and version    #
+#   get_HTTP_Info(packet): decode and retrive HTTP request method, URI, host, and version        #
 #                          number                                                                #
-
+#   get_TLS_Info(packet): decode and retrive TLS version number, and the                         #
+#                         destination host name                                                  #
 ##################################################################################################
 def capture_options():   
     
@@ -78,6 +79,7 @@ def format_tls_version(version):
     minor = version & 0xFF  # Get the lower byte
 
     formatted_version = f"TLS {major - 2}.{minor}"
+    
     return formatted_version
 
 def get_HTTP_Info(packet):
@@ -101,37 +103,42 @@ def get_HTTP_Info(packet):
 
 
 def get_TLS_Info(packet):
+    #initializing the variables
     version = None
     server_name = None
     tls_layer = packet[TLS]
+
+    #checking whether has TLS Client Hello or not
     if tls_layer.haslayer(TLSClientHello):
+        # reteive the version number
         version = format_tls_version(tls_layer.version)
-        #print("TLS Version:", tls_layer.version)
         if tls_layer.haslayer(TLS_Ext_ServerName):
-            #print("has exte")
+            #retrieving server name
             server_name_ext = tls_layer[TLS_Ext_ServerName]
             server_name = server_name_ext.servernames[0].servername.decode()
 
     return version, server_name
 
-
+##################################################################################################
+#                                         Packet Handler Function                                #
+#   This function is called for each tracked packet, filter HTTP request and TLSClientHello,     #
+#   and then print the packet info                                                               #
+##################################################################################################
 def handle_packet(packet):
-    """
-    This function will be called for each captured packet.
-    You can add custom logic here to process or filter packets.
-    """
 
     if packet.haslayer(TCP) and packet.haslayer(IP):
         ip_layer = packet[IP]
         tcp_layer = packet[TCP]
-        
+    
+    #filtering HTTPRequest packet
     if packet.haslayer(HTTPRequest):
         try:
             method, url, host, version = get_HTTP_Info(packet)
-            print(f"{format_time(packet.time)} {version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} {method} {url}")
+            if method == "GET" or method == "POST":
+                print(f"{format_time(packet.time)} {version} {ip_layer.src}:{tcp_layer.sport} -> {ip_layer.dst}:{tcp_layer.dport} {host} {method} {url}")
         except Exception as e:
             print(f"Could not decode the HTTP payload.{e}")
-
+    #filtering TLSClientHello packet
     if packet.haslayer(TLS):
         try:
             tls_version, host_name = get_TLS_Info(packet)
@@ -140,6 +147,10 @@ def handle_packet(packet):
         except Exception as e:
             print(f"Could not decode the TLS payload.{e}")
 
+##################################################################################################
+#                                    Packet Tracing Function(Interface)                          #
+#   This function trace the packet from the interface                                            #
+##################################################################################################
 def trackingFromInterface(interfaceName,exp):
     try:
         print("Packet capturing started. Press Ctrl+C to stop.")
@@ -149,12 +160,20 @@ def trackingFromInterface(interfaceName,exp):
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
+##################################################################################################
+#                                    Packet Tracing Function(From File)                          #
+#   This function trace the packet from the file                                                 #
+##################################################################################################
 def trackingFromFile(fileName,exp):
     try:
         sniff( prn=handle_packet, offline = fileName, filter = exp)
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
+##################################################################################################
+#                                    Main Function                                               #
+#   This is the main function, program starts from here                                          #
+##################################################################################################
 if __name__ == "__main__":
     interfaceName, tracefile, expression = capture_options()
     if tracefile == None:

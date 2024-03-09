@@ -7,7 +7,7 @@ SBU ID: 115074486
 
 Install Packages
 ----------------
-Scapy Installation command: sudo apt install python3-scapy (Note: I run my code in 64-bit Kali Linux 2023.4, so i hadn't need to install
+Scapy Installation command: sudo apt install python3-scapy (Note: I ran my code in 64-bit Kali Linux 2023.4, so i hadn't need to install
                                                           it separately.)
 
 

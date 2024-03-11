@@ -66,10 +66,14 @@ def read_arp_cache():
 
 def handle_packet(packet):
 
+    print(f"outside: {ARP_ENTRIES}")
+    print(f"outside: {packet}")
+ 
     if packet[ARP].op == 2: # ARP response (op=2)
         tracked_ip = packet[ARP].psrc
         tracked_mac = packet[ARP].hwsrc
-        print(packet)
+        print(f"insideside: {ARP_ENTRIES}")
+        print(f"inside: {packet}")
         pattern = re.compile(r'\S+ \(([\d\.]+)\) at ([\da-f:]+) \[ether\] on (\w+)')
         ipfound = False
         macfound = False

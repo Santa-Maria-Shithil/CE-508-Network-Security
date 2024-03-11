@@ -7,7 +7,7 @@ SBU ID: 115074486
 
 Install Packages
 ----------------
-Scapy Installation command: sudo apt install python3-scapy (Note: I run my code in 64-bit Kali Linux 2023.4, so i hadn't need to install
+Scapy Installation command: sudo apt install python3-scapy (Note: I ran my code in 64-bit Kali Linux 2023.4, so I hadn't need to install
                                                           it separately.)
 
 
@@ -16,8 +16,8 @@ Task1: HTTP/TLS connection monitoring
 Implementation:
     1. Main function takes command line arguments from the user with the help of capture_options() function and pass it 
     to the trackingFromInterface() or trackingFromFile() function. If no argument passes to the main function, then by default
-    the trackingFromInterface() will be called with the default interface and empty expression. If either only readfile or 
-    both readfile and interface pass as argument then trackingFromFile() function will be called and will trace the packet 
+    the trackingFromInterface() will be called with the default interface and empty expression. If either only read-file or 
+    both read-file and interface pass as argument then trackingFromFile() function will be called and will trace the packet 
     from the file and ignore the interface (Note: tcmdump also works this way). Both these function will call the handle_packet() 
     function for each captured packet. 
     2. capture_options(): This function captures the arguments (interface, file name, expression) from the command line and return 
@@ -26,17 +26,17 @@ Implementation:
     interrupt. It will send every traced packet to the handle_packet() function.
     4. trackingFromFile(): This function will track the packet from the given file based on the expression. It will also send
     every traced packet to the handle_packet() function.
-    5. handle_packet(): This function will filter the HTTP request and the TLSClientHello request. It then retrive the required
+    5. handle_packet(): This function will filter the HTTP request and the TLSClientHello request. It then retrieve the required
     information from the packet with the help of various handler functions and print it: 
             a. format_time(): convert packet captured time to human readable format              
-            b. format_tls_version() : convert the TLS version to human readdable version             
-            c. get_HTTP_Info(): decode and retrive HTTP request method, URI, host, and version number                                                                #
-            d. get_TLS_Info(): decode and retrive TLS version number, and the destination host name
+            b. format_tls_version() : convert the TLS version to human readable version             
+            c. get_HTTP_Info(): decode and retrieve HTTP request method, URI, host, and version number                                                                
+            d. get_TLS_Info(): decode and retrieve TLS version number, and the destination host name
 
 Sample Output: We can run with various options combination. Following I have given few possible combinations (both correct
-and wrong) with  their output. 
+and incorrect) with  their output. 
 
-    Sample1: Witout any command line argument (Note: Incase of HTTP request, professor only asked to print HTTP as protocol,
+    Sample1: Without any command line argument (Note: Incase of HTTP request, professor only asked to print HTTP as protocol,
                                                 I have printed the protocol with the version number)
         Command: 
             Console1: sudo python  mysniffer.py
@@ -86,8 +86,9 @@ and wrong) with  their output.
         2024-03-08 21:50:23.098479 TLS v1.1 192.168.15.129:58434 -> 142.251.16.84:443 accounts.google.com
         2024-03-08 21:50:26.044213 TLS v1.1 192.168.15.129:40920 -> 157.240.241.35:443 www.facebook.com
 
-    Sample4: With read file as an argument. (Note: though I haven't gave any interface argument but still assiging eth0
-                                            as default argument as professor asked.) 
+    Sample4: With read file as an argument. (Note: though I haven't gave any interface argument but still assigning eth0
+                                            as default argument as professor asked. But it will read the trace from
+				                            the given trace.pcap file) 
         Command: 
             Console1: sudo python  mysniffer.py -r trace.pcap
 
@@ -95,21 +96,20 @@ and wrong) with  their output.
         Interface: eth0 
         Tracefile: trace.pcap
         Expression: None
-        2024-03-01 01:25:10.717055 HTTP/1.1 172.24.17.187:53196 -> 172.253.62.105:80 www.google.com GET /mail
-        2024-03-01 01:25:10.778106 TLS v1.1 172.24.17.187:53197 -> 142.251.16.18:443 mail.google.com
-        2024-03-01 01:25:10.886936 TLS v1.1 172.24.17.187:53198 -> 172.253.115.84:443 accounts.google.com
-        2024-03-01 01:25:13.155391 HTTP/1.1 172.24.17.187:53199 -> 172.253.62.99:80 www.google.com GET /mail
-        2024-03-01 01:25:13.207253 TLS v1.1 172.24.17.187:53200 -> 142.251.16.83:443 mail.google.com
-        2024-03-01 01:25:13.367034 TLS v1.1 172.24.17.187:53201 -> 172.253.115.84:443 accounts.google.com
-        2024-03-01 01:25:15.899626 HTTP/1.1 172.24.17.187:53202 -> 172.253.62.147:80 www.google.com GET /mail
-        2024-03-01 01:25:15.951086 TLS v1.1 172.24.17.187:53203 -> 142.251.16.19:443 mail.google.com
-        2024-03-01 01:25:16.056800 TLS v1.1 172.24.17.187:53204 -> 172.253.115.84:443 accounts.google.com
-        2024-03-01 01:25:18.351001 HTTP/1.1 172.24.17.187:53205 -> 172.253.62.103:80 www.google.com GET /mail
-        2024-03-01 01:25:18.401724 TLS v1.1 172.24.17.187:53206 -> 142.251.16.17:443 mail.google.com
-        2024-03-01 01:25:18.519053 TLS v1.1 172.24.17.187:53207 -> 172.253.115.84:443 accounts.google.com
+        2013-01-12 22:30:49.032953 HTTP/1.0 192.168.0.200:40341 -> 87.98.246.8:80 pic.leech.it:80 GET /i/f166c/479246b0asttas.jpg
+        2013-01-12 22:31:19.244125 HTTP/1.0 192.168.0.200:40630 -> 216.137.63.121:80 ecx.images-amazon.com:80 GET /images/I/41oZ1XsiOAL.
+        2013-01-12 22:31:50.359908 HTTP/1.0 192.168.0.200:55528 -> 159.148.96.184:80 images4.byinter.net:80 GET /DSC442566.gif
+        2013-01-13 02:54:46.028958 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/InRelease
+        2013-01-13 02:54:46.032578 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/InRelease
+        2013-01-13 02:54:46.056291 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/Release.gpg
+        2013-01-13 02:54:46.062554 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/Release.gpg
+        2013-01-13 02:54:46.082239 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/Release
+        2013-01-13 02:54:46.094457 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/Release
+        2013-01-13 02:54:46.102039 HTTP/1.1 192.168.0.200:47110 -> 91.189.91.15:80 us.archive.ubuntu.com GET /ubuntu/dists/oneiric/InRelease
+
 
     Sample5: With both interface, read, and expression as command line argument.  In this case, the interface is ignored
-    and trace the packet from the read file. Becasue of the given expression, only the packets of port 80 are tracked. 
+    and trace the packet from the read file. Because of the given expression, only the packets of port 80 are tracked. 
         Command: 
             Console1: sudo python  mysniffer.py -r trace.pcap -i eth0 "port 80"
 
@@ -118,12 +118,19 @@ and wrong) with  their output.
         Tracefile: trace.pcap
         Expression: port 80
         reading from file trace.pcap, link-type EN10MB (Ethernet), snapshot length 65535
-        2024-03-01 01:25:10.717055 HTTP/1.1 172.24.17.187:53196 -> 172.253.62.105:80 www.google.com GET /mail
-        2024-03-01 01:25:13.155391 HTTP/1.1 172.24.17.187:53199 -> 172.253.62.99:80 www.google.com GET /mail
-        2024-03-01 01:25:15.899626 HTTP/1.1 172.24.17.187:53202 -> 172.253.62.147:80 www.google.com GET /mail
-        2024-03-01 01:25:18.351001 HTTP/1.1 172.24.17.187:53205 -> 172.253.62.103:80 www.google.com GET /mail
+        2013-01-12 22:30:49.032953 HTTP/1.0 192.168.0.200:40341 -> 87.98.246.8:80 pic.leech.it:80 GET /i/f166c/479246b0asttas.jpg
+        2013-01-12 22:31:19.244125 HTTP/1.0 192.168.0.200:40630 -> 216.137.63.121:80 ecx.images-amazon.com:80 GET /images/I/41oZ1XsiOAL.
+        2013-01-12 22:31:50.359908 HTTP/1.0 192.168.0.200:55528 -> 159.148.96.184:80 images4.byinter.net:80 GET /DSC442566.gif
+        2013-01-13 02:54:46.028958 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/InRelease
+        2013-01-13 02:54:46.032578 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/InRelease
+        2013-01-13 02:54:46.056291 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/Release.gpg
+        2013-01-13 02:54:46.062554 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/Release.gpg
+        2013-01-13 02:54:46.082239 HTTP/1.1 192.168.0.200:49821 -> 91.189.92.190:80 security.ubuntu.com GET /ubuntu/dists/oneiric-security/Release
+        2013-01-13 02:54:46.094457 HTTP/1.1 192.168.0.200:59019 -> 91.189.88.33:80 extras.ubuntu.com GET /ubuntu/dists/oneiric/Release
+        2013-01-13 02:54:46.102039 HTTP/1.1 192.168.0.200:47110 -> 91.189.91.15:80 us.archive.ubuntu.com GET /ubuntu/dists/oneiric/InRelease
 
-    Sample6: Specified -r option but not mentioned the readfile
+
+    Sample6: Specified -r option but not mentioned the read-file
         Command: 
             Console1: sudo python  mysniffer.py -r  
 
@@ -178,30 +185,31 @@ and wrong) with  their output.
                                 captured previously.
 
 Task2: ARP cache poisoning detector
+------------------------------------
 Implementation:
     1. Main function takes command line arguments from the user with the help of capture_options() function and pass it 
     to the trackingFromInterface() function. This function will call the handle_packet() function for each captured packet.
-    Another function read_arp_cache() is used to read the ARP cache from the system and store it to a constant. This constant
-    will be used as a gound truth to detect the  ARP poisoning. 
-    2. capture_options(): This function captures the arguments (interface) from the command line and return these to the main 
-    function to do the tracing
-    3. trackingFromInterface(): This function traces the ARP packet with the help of the arp_filter() function. The arp_filter() 
+    2. arp_cache(): This is used to read the ARP cache from the system and store it to a constant. This constant
+    will be used as a ground truth to detect the  ARP poisoning. 
+    3. capture_options(): This function captures the arguments (interface) from the command line and return these to the main 
+    function to do the tracing.
+    4. trackingFromInterface(): This function traces the ARP packet with the help of the arp_filter() function. The arp_filter() 
     function is used as a filter to the sniff() function of the Scapy library. 
-    5. handle_packet(): This function process every captured ARP response packet and match it with the stored ARP cache (that I have strored
-    in a constant). If it finds any mismatch between the announced MAC-IP binding with the MAC-IP binding of the stored ARP cache
-    then it will print an warning. 
+    5. handle_packet(): This function is used to process every captured ARP response packet and match it with the stored ARP cache (that 
+    I have stored in a constant). If it finds any mismatch between the announced MAC-IP binding with the MAC-IP binding of the stored ARP cache
+    then it will print a warning. 
 
 Output: 
-    Sample1: Without any command line argument. The detector prints the warning several times, becasue the ARP cache gets updated
-    after a specified time limit. In my VM1 the ARP cache timeout limit is 60s. Hence, until the cache updated with the new MAC-IP
-    binding, the detector keeps printing the warning. The IP address of the gateway, attacker, and the victim is as follows:
-    Victim: 192.168.15.129
-    Attacker: 192.168.15.130
+    Sample1: Without any command line argument. The detector prints the warning whenever it receives a ARP response with a different MAC-IP 
+    binding other than the saved ground truth cache. The IP address of the gateway, attacker, and the victim is as follows:
+    Victim (VM1): 192.168.15.129
+    Attacker (VM2): 192.168.15.130
     gateway: 192.168.15.2
 
         Command: 
-            Console1(VM1): sudo python  arpwatch.py
-            Console1(VM2): sudo arpspoof -i eth0 -t 192.168.15.129 192.168.15.2 (ARP poisoning attack initiated)
+            Console1(VM1): sudo python  arpwatch.py (*Note: ARP cache poisoning detector started)
+            Console1(VM2): sudo arpspoof -i eth0 -t 192.168.15.129 192.168.15.2 (*Note: ARP poisoning attack initiated. Poisoning the victim's ARP cache)
+            Console2(VM2): sudo arpspoof -i eth0 -t 192.168.15.2 192.168.15.129 (*Note: Poisoning the gateway's ARP cache)
         Output: 
         Interface: eth0
         The ARP cache is:
@@ -210,98 +218,100 @@ Output:
         ? (192.168.15.130) at 00:0c:29:df:98:ab [ether] on eth0          (*Note: attacker's MAC-IP binding in the cache)
         ARP cache poisoning detector started. Press Ctrl+C to stop.
         Ether / ARP is at 00:50:56:f9:78:b8 says 192.168.15.2 / Padding  (*Note: Original ARP response from the gateway)
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding  (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding)
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding  (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding    (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
 
-    Sample2: Without command line argument. Again the detector keeps printing the warning several times becasue
-    of the reason as descried in task2 sample1. The IP address of the gateway, attacker, and the victim is as follows:
-    Victim: 192.168.15.129
-    Attacker: 192.168.15.130
+    Sample2: With command line argument. Again the detector prints the warning whenever it receives a ARP response with 
+    a different MAC-IP binding other than the saved ground truth cache. The IP address of the gateway, attacker, and the 
+    victim is as follows:
+    Victim (VM1): 192.168.15.129
+    Attacker (VM2): 192.168.15.130
     gateway: 192.168.15.2
     
         Command: 
-            Console1(VM1): sudo python  arpwatch.py -i eth0
-            Console1(VM2): sudo arpspoof -i eth0 -t 192.168.15.129 192.168.15.2 (ARP poisoning attack initiated)
+            Console1(VM1): sudo python  arpwatch.py -i eth0 (*Note: ARP cache poisoning detector started)
+            Console1(VM2): sudo arpspoof -i eth0 -t 192.168.15.129 192.168.15.2 (*Note: ARP poisoning attack initiated. Poisoning the victim's ARP cache)
+            Console2(VM2): sudo arpspoof -i eth0 -t 192.168.15.2 192.168.15.129 (*Note: Poisoning the gateway's ARP cache)
         Output: 
         Interface: eth0
         The ARP cache is:
         ? (192.168.15.2) at 00:50:56:f9:78:b8 [ether] on eth0            (*Note: Original MAC-IP binding of the gateway in the ARP cache)
         ARP cache poisoning detector started. Press Ctrl+C to stop.
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding     (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding)
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding     (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
-        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding
+        Ether / ARP is at 00:0c:29:df:98:ab says 192.168.15.2 / Padding (*Note: Spoofed ARP response from the attacker with a different MAC-IP binding of the gateway)
         ##########################Warning Warning Warning#################
         There is an ARP cache poisoning
         192.168.15.2 changed from 00:50:56:f9:78:b8 to 00:0c:29:df:98:ab
